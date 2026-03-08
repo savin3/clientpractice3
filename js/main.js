@@ -44,6 +44,98 @@ Vue.component('card-component', {
     }
 })
 
+Vue.component('add-card-form', {
+    props: ['allCards'],
+
+    data() {
+        return {
+            title: '',
+            description: '',
+            deadline: '',
+            error: ''
+        }
+    },
+    methods: {
+        addCard(){
+            if(!this.title.trim()) {
+                this.error = 'Введите заголовок'
+                return
+            }
+
+            if (!this.description.trim()) {
+                this.error = 'Введите описание'
+                return
+            }
+
+            if (!this.deadline) {
+                this.error = 'Выберите дедлайн'
+                return
+            }
+
+            const deadlineDate = new Date(this.deadline)
+            const now = new Date()
+
+            if (deadlineDate < now) {
+                this.error = 'Дедлайн должен быть в будущем времени'
+                return
+            }
+
+            const newCard = {
+                id: Date.now(),
+                title: this.title.trim(),
+                description: this.description.trim(),
+                deadline: this.deadline,
+                createdAt: new Date().toISOString(),
+                editedAt: null,
+                column: 1,
+                returnReason: null
+            }
+            this.$emit('card-created', newCard)
+
+            this.title = ''
+            this.description = ''
+            this.deadline = ''
+            this.error = ''
+        },
+
+        getTodayString() {
+            const today = new Date()
+            const year = today.getFullYear()
+            const month = String(today.getMonth() + 1).padStart(2, '0')
+            const day = String(today.getDate()).padStart(2, '0')
+            const hours = String(today.getHours()).padStart(2, '0')
+            const minutes = String(today.getMinutes()).padStart(2, '0')
+            return `${year}-${month}-${day}T${hours}:${minutes}`
+        }
+    },
+    template: `
+        <div class="add-form">
+            <h3>Добавить новую задачу</h3>
+            
+            <div class="form-group">
+                <label>Заголовок:</label>
+                <input type="text" v-model="title" placeholder="Введите заголовок">
+            </div>
+            
+            <div class="form-group">
+                <label>Описание:</label>
+                <textarea v-model="description" placeholder="Введите описание задачи" rows="3"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Дедлайн:</label>
+                <input type="datetime-local" v-model="deadline" :min="getTodayString()">
+            </div>
+            
+             <div v-if="error" class="error">
+                {{ error }}
+            </div>
+            
+            <button @click="addCard">Создать задачу</button>
+        </div>
+    `
+})
+
 let app = new Vue ({
     el: '#app',
     data: {
