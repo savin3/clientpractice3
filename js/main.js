@@ -146,5 +146,10 @@ let app = new Vue ({
             {id: 4, title: 'Выполненные задачи'}
         ],
         allCards: []
+    },
+    methods: {
+        addCard(cardData){
+            this.allCards.push(cardData)
+        }
     }
 })
