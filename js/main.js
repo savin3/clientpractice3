@@ -38,7 +38,7 @@ Vue.component('card-component', {
                 </p>
             </div>
             
-            <div class="card-actions">
+            <div class="card-actions" v-if="cardData.column !== 4">
                 <button @click="editCard" class="action-button edit">Редактировать</button>
                 
                 <button
