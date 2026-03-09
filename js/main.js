@@ -10,7 +10,8 @@ Vue.component('column-component', {
             :card-data="card"
             @move-card="$emit('move-card', $event)"
             @return-to-second="$emit('return-to-second', $event)"
-            @edit-card="$emit('edit-card', $event)">
+            @edit-card="$emit('edit-card', $event)"
+            @delete-card="$emit('delete-card', $event)">
             </card-component>
         </div>
     `,
@@ -36,9 +37,15 @@ Vue.component('card-component', {
                 <p v-if="cardData.editedAt" class="edited">
                     Изменено: {{ formatDate(cardData.editedAt) }}
                 </p>
+                <p v-if="cardData.column === 4" :class="deadlineStatus">
+                    Статус: {{ statusText }}
+                </p>
             </div>
             
             <div class="card-actions" v-if="cardData.column !== 4">
+                <button @click="deleteCard"
+                v-if="cardData.column === 1" 
+                class="action-button delete">Удалить</button>
                 <button @click="editCard" class="action-button edit">Редактировать</button>
                 
                 <button
@@ -53,6 +60,25 @@ Vue.component('card-component', {
             </div>
         </div>
     `,
+    computed: {
+      isOverdue() {
+          if (this.cardData.column !== 4)
+              return false
+          const deadline = new Date(this.cardData.deadline)
+          const now = new Date()
+          return deadline < now
+      },
+      deadlineStatus() {
+          if (this.cardData.column !== 4)
+              return ''
+          return this.isOverdue ? 'overdue' : 'ontime'
+      },
+      statusText() {
+          if (this.cardData.column !== 4)
+              return ''
+          return this.isOverdue ? 'Просрочено' : 'Выполнено в срок'
+      }
+    },
     methods: {
         formatDate(dateString) {
             const date = new Date(dateString);
@@ -75,6 +101,11 @@ Vue.component('card-component', {
         },
         editCard() {
             this.$emit('edit-card', this.cardData)
+        },
+        deleteCard() {
+            if(confirm('Удалить задачу навсегда?')) {
+                this.$emit('delete-card', this.cardData.id)
+            }
         }
     }
 })
@@ -385,6 +416,9 @@ let app = new Vue ({
         closeEditModal() {
             this.showEditModal = false
             this.editingCard = null
+        },
+        deleteCard(cardId) {
+            this.allCards = this.allCards.filter(card => card.id !== cardId)
         }
     }
 })

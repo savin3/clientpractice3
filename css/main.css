@@ -225,3 +225,18 @@ body {
 .edited {
     color: #800808;
 }
+
+.overdue {
+    color: #d32f2f;
+    font-weight: bold;
+}
+
+.ontime {
+    color: #44944A;
+    font-weight: bold;
+}
+
+.action-button.delete {
+    background: #d32f2f;
+    color: #fff;
+}
