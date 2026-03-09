@@ -22,7 +22,9 @@
                 :key="col.id"
                 :column-id="col.id"
                 :column-title="col.title"
-                :all-cards="allCards">
+                :all-cards="allCards"
+                @move-card="moveCard"
+                @return-to-second="returnToSecond">>
                 </column-component>
             </div>
         </div>

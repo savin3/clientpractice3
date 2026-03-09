@@ -28,6 +28,18 @@ Vue.component('card-component', {
                 <p>Создано: {{ formatDate(cardData.createdAt) }} </p>
                 <p>Дедлайн: {{ formatDate(cardData.deadline) }} </p>
             </div>
+            
+            <div class="card-actions">
+                <button
+                v-if="cardData.column < 4"
+                @click="moveForward"
+                class="move-button">Переместить</button>
+                
+                <button
+                v-if="cardData.column === 3"
+                @click="moveBack"
+                class="move-button back">Вернуть</button>
+            </div>
         </div>
     `,
     methods: {
@@ -40,6 +52,15 @@ Vue.component('card-component', {
                 hour: '2-digit',
                 minute: '2-digit'
             })
+        },
+        moveForward() {
+            this.$emit('move-card', {
+                cardId: this.cardData.id,
+                toColumn: this.cardData.column + 1
+            })
+        },
+        moveBack() {
+            this.$emit('return-to-second', this.cardData.id)
         }
     }
 })
@@ -150,6 +171,18 @@ let app = new Vue ({
     methods: {
         addCard(cardData){
             this.allCards.push(cardData)
+        },
+        moveCard(moveInfo) {
+            const card = this.allCards.find(card => card.id === moveInfo.cardId)
+            if (card) {
+                card.column = moveInfo.toColumn
+            }
+        },
+        returnToSecond(cardId) {
+            const card = this.allCards.find(card => card.id === cardId)
+            if(card) {
+                card.column = 2
+            }
         }
     }
 })

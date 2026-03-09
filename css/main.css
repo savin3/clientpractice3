@@ -109,5 +109,32 @@ body {
 }
 
 .add-form button:hover {
-    background: #1E5945;
+    opacity: 0.8;
+}
+
+.card-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    border-top: 1px solid #333;
+    padding-top: 10px;
+}
+
+.move-button {
+    flex: 1;
+    padding: 10px;
+    background: #44944A;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.move-button.back {
+    background: #fef0e5;
+}
+
+.move-button:hover {
+    opacity: 0.8;
 }
