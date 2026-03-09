@@ -7,7 +7,9 @@ Vue.component('column-component', {
             <card-component
             v-for="card in columnCards"
             :key="card.id"
-            :card-data="card">
+            :card-data="card"
+            @move-card="$emit('move-card', $event)"
+            @return-to-second="$emit('return-to-second', $event)">
             </card-component>
         </div>
     `,
