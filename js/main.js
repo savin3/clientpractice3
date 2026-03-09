@@ -370,11 +370,13 @@ let app = new Vue ({
     methods: {
         addCard(cardData){
             this.allCards.push(cardData)
+            this.saveToLocalStorage()
         },
         moveCard(moveInfo) {
             const card = this.allCards.find(card => card.id === moveInfo.cardId)
             if (card) {
                 card.column = moveInfo.toColumn
+                this.saveToLocalStorage()
 
                 if(moveInfo.toColumn === 4) {
                     card.returnReason = null
@@ -390,6 +392,7 @@ let app = new Vue ({
             if (card) {
                 card.column = 2
                 card.returnReason = data.reason
+                this.saveToLocalStorage()
             }
             this.showReturnModal = false
             this.returningCardId = null
@@ -409,6 +412,7 @@ let app = new Vue ({
                 card.description = updates.description
                 card.deadline = updates.deadline
                 card.editedAt = updates.editedAt
+                this.saveToLocalStorage()
             }
             this.showEditModal = false
             this.editingCard = null
@@ -419,6 +423,19 @@ let app = new Vue ({
         },
         deleteCard(cardId) {
             this.allCards = this.allCards.filter(card => card.id !== cardId)
+            this.saveToLocalStorage()
+        },
+        saveToLocalStorage() {
+            localStorage.setItem('kanban-app', JSON.stringify(this.allCards))
+        },
+        loadFromLocalStorage() {
+            const saved = localStorage.getItem('kanban-app')
+            if (saved) {
+                this.allCards = JSON.parse(saved)
+            }
         }
+    },
+    mounted() {
+        this.loadFromLocalStorage()
     }
 })
