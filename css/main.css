@@ -138,3 +138,59 @@ body {
 .move-button:hover {
     opacity: 0.8;
 }
+
+.modal-window {
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.modal {
+    background: #fff;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 20px;
+    width: 400px;
+}
+
+.modal h3 {
+    margin-bottom: 10px;
+}
+
+.modal label {
+    margin-bottom: 8px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.modal-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.modal-actions button:first-child {
+    background: #d32f2f;
+    color: #fff;
+}
+
+.modal-actions button:last-child {
+    background: #44944A;
+    color: #fff;
+}
+
+.modal-actions button:hover {
+    opacity: 0.8;
+}

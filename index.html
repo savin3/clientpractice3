@@ -24,9 +24,16 @@
                 :column-title="col.title"
                 :all-cards="allCards"
                 @move-card="moveCard"
-                @return-to-second="returnToSecond">>
+                @return-to-second="returnToSecond">
                 </column-component>
             </div>
+
+            <return-modal
+            :is-visible="showReturnModal"
+            :card-id="returningCardId"
+            @confirm="confirmReturn"
+            @close="closeModal">
+            </return-modal>
         </div>
     </div>
 </body>

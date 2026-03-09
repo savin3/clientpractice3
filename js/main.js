@@ -29,6 +29,9 @@ Vue.component('card-component', {
             <div class="card-meta">
                 <p>Создано: {{ formatDate(cardData.createdAt) }} </p>
                 <p>Дедлайн: {{ formatDate(cardData.deadline) }} </p>
+                <p v-if="cardData.returnReason" class="return-reason">
+                    Причина возврата: {{ cardData.returnReason }}
+                </p>
             </div>
             
             <div class="card-actions">
@@ -142,7 +145,7 @@ Vue.component('add-card-form', {
             
             <div class="form-group">
                 <label>Описание:</label>
-                <textarea v-model="description" placeholder="Введите описание задачи" rows="3"></textarea>
+                <textarea v-model="description" placeholder="Введите описание задачи"></textarea>
             </div>
             
             <div class="form-group">
@@ -159,6 +162,58 @@ Vue.component('add-card-form', {
     `
 })
 
+Vue.component('return-modal', {
+    props: {
+        isVisible: {
+            type: Boolean,
+            default: false
+        },
+        cardId: {
+            type: [String, Number],
+            default: null
+        }
+    },
+    data() {
+        return {
+            reason: ''
+        }
+    },
+    methods: {
+        confirm() {
+            if (!this.reason.trim()) {
+                alert('Причина возврата')
+                return
+            }
+            this.$emit('confirm', {
+                cardId: this.cardId,
+                reason: this.reason.trim()
+            })
+            this.reason = ''
+        },
+        close() {
+            this.$emit('close')
+            this.reason = ''
+        }
+    },
+    template: `
+        <div v-if="isVisible" class="modal-window" @click.self="close">
+            <div class="modal">
+                <h3>Причина возврата</h3>
+                
+                <div class="form-group">
+                    <label>Укажите причину, почему вы возвращаете задачу на повторную работу</label>
+                    <textarea v-model="reason" placeholder="Найден баг, задача не прошла тест, или другое"></textarea>
+                </div>
+                
+                <div class="modal-actions">
+                    <button @click="close">Отмена</button>
+                    <button @click="confirm">Подтвердить</button>
+                </div>
+            </div>
+        </div>
+    `
+})
+
 let app = new Vue ({
     el: '#app',
     data: {
@@ -168,7 +223,9 @@ let app = new Vue ({
             {id: 3, title: 'Тестирование'},
             {id: 4, title: 'Выполненные задачи'}
         ],
-        allCards: []
+        allCards: [],
+        showReturnModal: false,
+        returningCardId: null,
     },
     methods: {
         addCard(cardData){
@@ -178,13 +235,28 @@ let app = new Vue ({
             const card = this.allCards.find(card => card.id === moveInfo.cardId)
             if (card) {
                 card.column = moveInfo.toColumn
+
+                if(moveInfo.toColumn === 4) {
+                    card.returnReason = null
+                }
             }
         },
         returnToSecond(cardId) {
-            const card = this.allCards.find(card => card.id === cardId)
-            if(card) {
+            this.returningCardId = cardId
+            this.showReturnModal = true
+        },
+        confirmReturn(data) {
+            const card = this.allCards.find(card => card.id === data.cardId)
+            if (card) {
                 card.column = 2
+                card.returnReason = data.reason
             }
+            this.showReturnModal = false
+            this.returningCardId = null
+        },
+        closeModal() {
+            this.showReturnModal = false
+            this.returningCardId = null
         }
     }
 })
