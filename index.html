@@ -24,7 +24,8 @@
                 :column-title="col.title"
                 :all-cards="allCards"
                 @move-card="moveCard"
-                @return-to-second="returnToSecond">
+                @return-to-second="returnToSecond"
+                @edit-card="editCard">
                 </column-component>
             </div>
 
@@ -34,6 +35,13 @@
             @confirm="confirmReturn"
             @close="closeModal">
             </return-modal>
+
+            <edit-modal
+            :is-visible="showEditModal"
+            :card="editingCard"
+            @save="saveCardEdit"
+            @close="closeEditModal">
+            </edit-modal>
         </div>
     </div>
 </body>

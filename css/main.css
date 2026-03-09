@@ -194,3 +194,34 @@ body {
 .modal-actions button:hover {
     opacity: 0.8;
 }
+
+.action-button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.action-button.edit {
+    background: #bbb;
+    color: #fff;
+}
+
+.action-button.move {
+    background: #4ecdc4;
+    color: #fff;
+}
+
+.action-button.back {
+    background: #d32f2f;
+}
+
+.action-button:hover {
+    opacity: 0.8;
+}
+
+.edited {
+    color: #800808;
+}

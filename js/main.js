@@ -9,7 +9,8 @@ Vue.component('column-component', {
             :key="card.id"
             :card-data="card"
             @move-card="$emit('move-card', $event)"
-            @return-to-second="$emit('return-to-second', $event)">
+            @return-to-second="$emit('return-to-second', $event)"
+            @edit-card="$emit('edit-card', $event)">
             </card-component>
         </div>
     `,
@@ -32,9 +33,14 @@ Vue.component('card-component', {
                 <p v-if="cardData.returnReason" class="return-reason">
                     Причина возврата: {{ cardData.returnReason }}
                 </p>
+                <p v-if="cardData.editedAt" class="edited">
+                    Изменено: {{ formatDate(cardData.editedAt) }}
+                </p>
             </div>
             
             <div class="card-actions">
+                <button @click="editCard" class="action-button edit">Редактировать</button>
+                
                 <button
                 v-if="cardData.column === 3"
                 @click="moveBack"
@@ -66,6 +72,9 @@ Vue.component('card-component', {
         },
         moveBack() {
             this.$emit('return-to-second', this.cardData.id)
+        },
+        editCard() {
+            this.$emit('edit-card', this.cardData)
         }
     }
 })
@@ -162,6 +171,104 @@ Vue.component('add-card-form', {
     `
 })
 
+Vue.component('edit-modal', {
+    props: {
+        isVisible: {
+            type: Boolean,
+            default: false
+        },
+        card: {
+            type: Object,
+            default: null
+        }
+    },
+    data(){
+        return {
+            editedTitle: '',
+            editedDescription: '',
+            editedDeadline: '',
+        }
+    },
+    watch: {
+        card: {
+            handler(newCard) {
+                if (newCard) {
+                    this.editedTitle = newCard.title
+                    this.editedDescription = newCard.description
+
+                    const date = new Date(newCard.deadline)
+                    const year = date.getFullYear()
+                    const month = String(date.getMonth() + 1).padStart(2, '0')
+                    const day = String(date.getDate()).padStart(2, '0')
+                    const hours = String(date.getHours()).padStart(2, '0')
+                    const minutes = String(date.getMinutes()).padStart(2, '0')
+                    this.editedDeadline = `${year}-${month}-${day}T${hours}:${minutes}`
+                }
+            },
+            immediate: true,
+            deep: true
+        }
+    },
+    methods: {
+        save() {
+            if (!this.editedTitle.trim()) {
+                alert('Заголовок не может быть пустым')
+                return
+            }
+
+            if(!this.editedDescription.trim()) {
+                alert('Описание не может быть пустым')
+                return
+            }
+
+            const deadlineDate = new Date(this.editedDeadline)
+            const now = new Date()
+
+            if (deadlineDate < now) {
+                alert('Дедлайн должен быть в будущем времени')
+                return
+            }
+
+            this.$emit('save', {
+                title: this.editedTitle.trim(),
+                description: this.editedDescription.trim(),
+                deadline: this.editedDeadline,
+                editedAt: new Date().toISOString()
+            })
+        },
+        close(){
+            this.$emit('close')
+        }
+    },
+    template: `
+        <div v-if="isVisible" class="modal-window" @click.self="close">
+            <div class="modal">
+                <h3>Редактировать задачу</h3>
+                
+                <div class="form-group">
+                    <label>Заголовок:</label>
+                    <input type="text" v-model="editedTitle">
+                </div>
+                
+                <div class="form-group">
+                    <label>Описание:</label>
+                    <textarea v-model="editedDescription"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Дедлайн:</label>
+                    <input type="datetime-local" v-model="editedDeadline":min="editedDeadline">
+                </div>
+                
+                <div class="modal-actions">
+                    <button @click="close">Отмена</button>
+                    <button @click="save">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    `
+})
+
 Vue.component('return-modal', {
     props: {
         isVisible: {
@@ -226,6 +333,8 @@ let app = new Vue ({
         allCards: [],
         showReturnModal: false,
         returningCardId: null,
+        showEditModal: false,
+        editingCard: null
     },
     methods: {
         addCard(cardData){
@@ -257,6 +366,25 @@ let app = new Vue ({
         closeModal() {
             this.showReturnModal = false
             this.returningCardId = null
+        },
+        editCard(card) {
+            this.editingCard = card
+            this.showEditModal = true
+        },
+        saveCardEdit(updates) {
+            const card = this.allCards.find(card => card.id === this.editingCard.id)
+            if (card) {
+                card.title = updates.title
+                card.description = updates.description
+                card.deadline = updates.deadline
+                card.editedAt = updates.editedAt
+            }
+            this.showEditModal = false
+            this.editingCard = null
+        },
+        closeEditModal() {
+            this.showEditModal = false
+            this.editingCard = null
         }
     }
 })
