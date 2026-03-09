@@ -33,14 +33,14 @@ Vue.component('card-component', {
             
             <div class="card-actions">
                 <button
-                v-if="cardData.column < 4"
-                @click="moveForward"
-                class="move-button">Переместить</button>
-                
-                <button
                 v-if="cardData.column === 3"
                 @click="moveBack"
                 class="move-button back">Вернуть</button>
+                
+                <button
+                v-if="cardData.column < 4"
+                @click="moveForward"
+                class="move-button">Переместить</button>
             </div>
         </div>
     `,
