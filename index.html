@@ -11,39 +11,6 @@
 </head>
 <body>
     <div id="app">
-        <div class="app">
-            <h1>Kanban</h1>
-
-            <add-card-form :all-cards="allCards" @card-created="addCard"></add-card-form>
-
-            <div class="columns-container">
-                <column-component
-                v-for="col in columns"
-                :key="col.id"
-                :column-id="col.id"
-                :column-title="col.title"
-                :all-cards="allCards"
-                @move-card="moveCard"
-                @return-to-second="returnToSecond"
-                @edit-card="editCard"
-                @delete-card="deleteCard">
-                </column-component>
-            </div>
-
-            <return-modal
-            :is-visible="showReturnModal"
-            :card-id="returningCardId"
-            @confirm="confirmReturn"
-            @close="closeModal">
-            </return-modal>
-
-            <edit-modal
-            :is-visible="showEditModal"
-            :card="editingCard"
-            @save="saveCardEdit"
-            @close="closeEditModal">
-            </edit-modal>
-        </div>
     </div>
 </body>
 </html>

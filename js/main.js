@@ -350,20 +350,21 @@ Vue.component('return-modal', {
     `
 })
 
-let app = new Vue ({
-    el: '#app',
-    data: {
-        columns: [
-            {id: 1, title: 'Запланированные задачи'},
-            {id: 2, title: 'Задачи в работе'},
-            {id: 3, title: 'Тестирование'},
-            {id: 4, title: 'Выполненные задачи'}
-        ],
-        allCards: [],
-        showReturnModal: false,
-        returningCardId: null,
-        showEditModal: false,
-        editingCard: null
+Vue.component('app-component', {
+    data() {
+        return {
+            columns: [
+                {id: 1, title: 'Запланированные задачи'},
+                {id: 2, title: 'Задачи в работе'},
+                {id: 3, title: 'Тестирование'},
+                {id: 4, title: 'Выполненные задачи'}
+            ],
+            allCards: [],
+            showReturnModal: false,
+            returningCardId: null,
+            showEditModal: false,
+            editingCard: null
+        }
     },
     methods: {
         addCard(cardData){
@@ -435,5 +436,45 @@ let app = new Vue ({
     },
     mounted() {
         this.loadFromLocalStorage()
-    }
+    },
+    template: `
+        <div class="app">
+            <h1>Kanban</h1>
+
+            <add-card-form :all-cards="allCards" @card-created="addCard"></add-card-form>
+
+            <div class="columns-container">
+                <column-component
+                v-for="col in columns"
+                :key="col.id"
+                :column-id="col.id"
+                :column-title="col.title"
+                :all-cards="allCards"
+                @move-card="moveCard"
+                @return-to-second="returnToSecond"
+                @edit-card="editCard"
+                @delete-card="deleteCard">
+                </column-component>
+            </div>
+            
+            <return-modal
+            :is-visible="showReturnModal"
+            :card-id="returningCardId"
+            @confirm="confirmReturn"
+            @close="closeModal">
+            </return-modal>
+
+            <edit-modal
+            :is-visible="showEditModal"
+            :card="editingCard"
+            @save="saveCardEdit"
+            @close="closeEditModal">
+            </edit-modal>
+        </div>
+    `
+})
+
+let app = new Vue ({
+    el: '#app',
+    template: '<app-component></app-component>'
 })
