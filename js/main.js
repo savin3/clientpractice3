@@ -235,9 +235,7 @@ Vue.component('edit-modal', {
                     const minutes = String(date.getMinutes()).padStart(2, '0')
                     this.editedDeadline = `${year}-${month}-${day}T${hours}:${minutes}`
                 }
-            },
-            immediate: true,
-            deep: true
+            }
         }
     },
     methods: {
