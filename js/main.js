@@ -305,7 +305,7 @@ Vue.component('return-modal', {
             default: false
         },
         cardId: {
-            type: [String, Number],
+            type: [Number],
             default: null
         }
     },
