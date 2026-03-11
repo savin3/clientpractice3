@@ -513,7 +513,7 @@ Vue.component('app-component', {
                 :column-id="col.id"
                 :column-title="col.title"
                 :all-cards="allCards"
-                @move-card="moveCardWithAnimation"
+                @move-card="moveCard"
                 @return-to-second="returnToSecond"
                 @edit-card="editCard"
                 @delete-card="deleteCard">
