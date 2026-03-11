@@ -25,8 +25,17 @@ Vue.component('column-component', {
 Vue.component('card-component', {
     props: ['cardData'],
     template: `
-        <div class="card">
-            <h3> {{ cardData.title }} </h3>
+        <div :class="cardClasses">
+            <div class="card-header">
+                <h3 class="card-title"> 
+                {{ cardData.title }}
+                <span v-if="cardData.returnCount > 0" class="return-badge">
+                    Возвратов: {{ cardData.returnCount }}
+                </span>
+                </h3>
+                 <span v-if="cardData.isPriority" class="priority-badge">Приоритет</span>
+            </div>
+                
             <p class="card-description"> {{ cardData.description }} </p>
             <div class="card-meta">
                 <p>Создано: {{ formatDate(cardData.createdAt) }} </p>
@@ -77,7 +86,34 @@ Vue.component('card-component', {
           if (this.cardData.column !== 4)
               return ''
           return this.isOverdue ? 'Просрочено' : 'Выполнено в срок'
-      }
+      },
+        hoursUntilDeadline() {
+            const now = new Date()
+            const deadline = new Date(this.cardData.deadline)
+            const diffMs = deadline - now
+            return Math.floor(diffMs / (1000 * 60 * 60))
+        },
+        deadlineWarningClass() {
+            if(this.cardData.column === 4) return ''
+
+            const hours = this.hoursUntilDeadline
+
+            if (hours < 24) {
+                return 'deadline-critical'
+            } else if (hours < 72) {
+                return 'deadline-warning'
+            }
+            return ''
+        },
+        cardClasses() {
+            return {
+                'card': true,
+                'priority-card': this.cardData.isPriority,
+                'deadline-critical': this.deadlineWarningClass === 'deadline-critical',
+                'deadline-warning': this.deadlineWarningClass === 'deadline-warning',
+                'card-moving': this.$parent.movingCardId === this.cardData.id
+            }
+        }
     },
     methods: {
         formatDate(dateString) {
@@ -154,7 +190,8 @@ Vue.component('add-card-form', {
                 createdAt: new Date().toISOString(),
                 editedAt: null,
                 column: 1,
-                returnReason: null
+                returnReason: null,
+                returnCount: 0
             }
             this.$emit('card-created', newCard)
 
@@ -363,7 +400,10 @@ Vue.component('app-component', {
             showReturnModal: false,
             returningCardId: null,
             showEditModal: false,
-            editingCard: null
+            editingCard: null,
+            animatingCardId: null,
+            animationDirection: null,
+            movingCardId: null
         }
     },
     methods: {
@@ -391,6 +431,15 @@ Vue.component('app-component', {
             if (card) {
                 card.column = 2
                 card.returnReason = data.reason
+                card.returnCount = (card.returnCount || 0) + 1
+
+                if (card.returnCount > 1) {
+                    const newDeadline = prompt('This is not the first time the task has been returned. Set a new deadline', card.deadline)
+                    if (newDeadline) {
+                        card.deadline = newDeadline
+                    }
+                }
+
                 this.saveToLocalStorage()
             }
             this.showReturnModal = false
@@ -432,6 +481,22 @@ Vue.component('app-component', {
             if (saved) {
                 this.allCards = JSON.parse(saved)
             }
+        },
+        moveCardWithAnimation(moveInfo) {
+            const card = this.allCards.find(c => c.id === moveInfo.cardId)
+            if (!card) return
+
+            this.animatingCardId = moveInfo.cardId
+            this.movingCardId = moveInfo.cardId
+
+            setTimeout(() => {
+                this.moveCard(moveInfo)
+
+                setTimeout(() => {
+                    this.animatingCardId = null
+                    this.movingCardId = null
+                }, 100)
+            }, 400)
         }
     },
     mounted() {
@@ -450,7 +515,7 @@ Vue.component('app-component', {
                 :column-id="col.id"
                 :column-title="col.title"
                 :all-cards="allCards"
-                @move-card="moveCard"
+                @move-card="moveCardWithAnimation"
                 @return-to-second="returnToSecond"
                 @edit-card="editCard"
                 @delete-card="deleteCard">
