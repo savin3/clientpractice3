@@ -486,17 +486,15 @@ Vue.component('app-component', {
             const card = this.allCards.find(c => c.id === moveInfo.cardId)
             if (!card) return
 
-            this.animatingCardId = moveInfo.cardId
             this.movingCardId = moveInfo.cardId
 
             setTimeout(() => {
                 this.moveCard(moveInfo)
 
                 setTimeout(() => {
-                    this.animatingCardId = null
                     this.movingCardId = null
-                }, 100)
-            }, 400)
+                }, 50)
+            }, 1800)
         }
     },
     mounted() {
