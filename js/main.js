@@ -1,17 +1,17 @@
 Vue.component('column-component', {
     props: ['columnId', 'columnTitle', 'allCards'],
     template: `
-        <div class="column">
+        <div class="column" :data-column-id="columnId">
             <h2> {{ columnTitle }} </h2>
             
             <card-component
             v-for="card in columnCards"
             :key="card.id"
             :card-data="card"
-            @move-card="$emit('move-card', $event)"
-            @return-to-second="$emit('return-to-second', $event)"
-            @edit-card="$emit('edit-card', $event)"
-            @delete-card="$emit('delete-card', $event)">
+            @move-card="forwardMoveCard"
+            @return-to-second="forwardReturnToSecond"
+            @edit-card="forwardEditCard"
+            @delete-card="forwardDeleteCard">
             </card-component>
         </div>
     `,
@@ -19,13 +19,27 @@ Vue.component('column-component', {
         columnCards() {
             return this.allCards.filter(card => card.column === this.columnId)
         }
+    },
+    methods: {
+        forwardMoveCard(event) {
+            this.$emit('move-card', event)
+        },
+        forwardReturnToSecond(event) {
+            this.$emit('return-to-second', event)
+        },
+        forwardEditCard(event) {
+            this.$emit('edit-card', event)
+        },
+        forwardDeleteCard(event) {
+            this.$emit('delete-card', event)
+        }
     }
 })
 
 Vue.component('card-component', {
     props: ['cardData'],
     template: `
-        <div :class="cardClasses">
+        <div :class="cardClasses" ref="cardElement">
             <div class="card-header">
                 <h3 class="card-title"> 
                 {{ cardData.title }}
@@ -127,13 +141,30 @@ Vue.component('card-component', {
             })
         },
         moveForward() {
+            let coordinates = null
+            if (this.$refs.cardElement) {
+                const rect = this.$refs.cardElement.getBoundingClientRect()
+                coordinates = {
+                    top: rect.top,
+                    left: rect.left,
+                    width: rect.width,
+                    height: rect.height
+                }
+            }
+
             this.$emit('move-card', {
                 cardId: this.cardData.id,
-                toColumn: this.cardData.column + 1
+                toColumn: this.cardData.column + 1,
+                element: this.$refs.cardElement,
+                coordinates:  coordinates,
             })
         },
         moveBack() {
-            this.$emit('return-to-second', this.cardData.id)
+            this.$emit('return-to-second', {
+                cardId: this.cardData.id,
+                element: this.$refs.cardElement,
+                coordinates: this.$refs.cardElement ? this.$refs.cardElement.getBoundingClientRect() : null
+            })
         },
         editCard() {
             this.$emit('edit-card', this.cardData)
@@ -403,7 +434,15 @@ Vue.component('app-component', {
             editingCard: null,
             animatingCardId: null,
             animationDirection: null,
-            movingCardId: null
+            movingCardId: null,
+            flyingCard: null,
+            flyingStyle: {
+                top: '0px',
+                left: '0px',
+                width: '0px',
+                height: '0px',
+                display: 'none'
+            }
         }
     },
     methods: {
@@ -412,19 +451,10 @@ Vue.component('app-component', {
             this.saveToLocalStorage()
         },
         moveCard(moveInfo) {
-            const card = this.allCards.find(card => card.id === moveInfo.cardId)
-            if (card) {
-                card.column = moveInfo.toColumn
-                this.saveToLocalStorage()
-
-                if(moveInfo.toColumn === 4) {
-                    card.returnReason = null
-                }
-            }
+            this.animateCardMovement(moveInfo, moveInfo.toColumn)
         },
-        returnToSecond(cardId) {
-            this.returningCardId = cardId
-            this.showReturnModal = true
+        returnToSecond(moveInfo) {
+            this.animateCardMovement(moveInfo, 2)
         },
         confirmReturn(data) {
             const card = this.allCards.find(card => card.id === data.cardId)
@@ -495,6 +525,58 @@ Vue.component('app-component', {
                     this.movingCardId = null
                 }, 50)
             }, 1800)
+        },
+        animateCardMovement(moveInfo, targetColumnId) {
+            const sourceCardData = this.allCards.find(c => c.id === moveInfo.cardId)
+            if (!sourceCardData) return
+
+            const sourceElement = moveInfo.element
+            if (!sourceElement) return
+
+            const sourceRect = sourceElement.getBoundingClientRect()
+            const targetColumn = document.querySelector(`[data-column-id="${targetColumnId}"]`)
+            if (!targetColumn) return
+            const targetRect = targetColumn.getBoundingClientRect()
+
+            this.flyingCard = { ...sourceCardData }
+            this.flyingStyle = {
+                display: 'block',
+                position: 'fixed',
+                top: sourceRect.top + 'px',
+                left: sourceRect.left + 'px',
+                width: sourceRect.width + 'px',
+                zIndex: 9999,
+                opacity: 1,
+                transition: 'all 0.5s ease-in-out',
+                transform: 'scale(1)',
+                boxShadow: '0 10px 20px rgba(0,0,0,0.3)',
+            }
+
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    const targetLeft = targetRect.left + (targetRect.width / 2) - (sourceRect.width / 2)
+                    const targetTop = targetRect.top + (targetRect.height / 2) - (sourceRect.height / 2)
+
+                    this.flyingStyle = {
+                        ...this.flyingStyle,
+                        top: targetTop + 'px',
+                        left: targetLeft + 'px',
+                        opacity: 0,
+                        transform: 'scale(0.8)',
+                    }
+                }, 50)
+            })
+
+            setTimeout(() => {
+                const cardToMove = this.allCards.find(c => c.id === moveInfo.cardId)
+                if (cardToMove) {
+                    cardToMove.column = targetColumnId
+                    this.saveToLocalStorage()
+                }
+
+                this.flyingCard = null
+                this.flyingStyle.display = 'none'
+            }, 600)
         }
     },
     mounted() {
@@ -533,6 +615,13 @@ Vue.component('app-component', {
             @save="saveCardEdit"
             @close="closeEditModal">
             </edit-modal>
+            
+            <div v-if="flyingCard" class="card flying-card" :style="flyingStyle">
+                <div class="card-header">
+                    <h3 class="card-title">{{ flyingCard.title }}</h3>
+                </div>
+                <p class="card-description">{{ flyingCard.description }}</p>
+            </div>
         </div>
     `
 })
